@@ -1,0 +1,212 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Emergency Fund Calculator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: phone-first single column — header, inputs card, result card with bar comparison, "where to keep it", notes. Two columns on wide screens. */
+:root{
+  --bg:#EEF3FA; --bg2:#DCE6F5; --card:#FFFFFF; --ink:#0B213B; --muted:#3E4F66; --line:#D3DCE9;
+  --gold:#FFC21A; --goldInk:#0B213B; --green:#13874C; --red:#D4313A; --chip:#EEF2F8;
+  --display:"Poppins",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0A1628;--bg2:#10213B;--card:#13233D;--ink:#EEF3FA;--muted:#A9B9D0;--line:#26395A;--green:#3DDC84;--red:#FF7A7A;--chip:#1B2E4D;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0A1628;--bg2:#10213B;--card:#13233D;--ink:#EEF3FA;--muted:#A9B9D0;--line:#26395A;--green:#3DDC84;--red:#FF7A7A;--chip:#1B2E4D;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;min-height:100vh;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-size:clamp(28px,6vw,44px);line-height:1.08;margin:0;text-wrap:balance}
+h1 em{font-style:normal;background:var(--gold);color:var(--goldInk);padding:0 .2em;border-radius:6px}
+.lede{color:var(--muted);max-width:62ch;margin:0}
+.grid{display:grid;grid-template-columns:1fr;gap:20px}
+@media(min-width:880px){.grid{grid-template-columns:1fr 1.1fr;align-items:start}}
+.card{background:var(--card);border-radius:22px;padding:22px;box-shadow:0 12px 32px rgba(11,33,59,.10);display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--display);font-size:20px;margin:0}
+label{font-weight:700;font-size:15px;display:block;margin-bottom:6px}
+.hint{font-weight:500;color:var(--muted);font-size:13px}
+.money{display:flex;align-items:center;border:2px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+.money span{padding:0 12px;font-weight:800;color:var(--muted)}
+.money input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);font:700 20px var(--body);padding:12px 12px 12px 0;font-variant-numeric:tabular-nums}
+.money:focus-within{border-color:var(--gold)}
+.checks{display:flex;flex-direction:column;gap:10px}
+.check{display:flex;gap:12px;align-items:flex-start;background:var(--chip);border-radius:14px;padding:12px 14px;cursor:pointer}
+.check input{width:22px;height:22px;accent-color:#0B213B;margin-top:2px;flex:none}
+.check b{display:block}
+.check small{color:var(--muted)}
+input[type=checkbox]:focus-visible,.money input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.big{display:flex;flex-direction:column;gap:2px}
+.big .v{font-family:var(--display);font-size:clamp(40px,9vw,60px);line-height:1;font-variant-numeric:tabular-nums}
+.big .l{color:var(--muted);font-weight:600}
+.pill{align-self:flex-start;background:var(--gold);color:var(--goldInk);font-weight:800;border-radius:999px;padding:4px 14px;font-size:14px}
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar .row{display:flex;justify-content:space-between;gap:12px;font-weight:700;font-size:14px}
+.bar .row span:last-child{font-variant-numeric:tabular-nums}
+.track{height:18px;background:var(--chip);border-radius:9px;overflow:hidden;margin-top:6px}
+.fill{height:100%;border-radius:9px;transition:width .4s ease}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}}
+.f-target{background:var(--green)} .f-salary{background:#8FA3BF} .f-have{background:var(--gold)}
+.callout{background:var(--chip);border-radius:14px;padding:14px 16px;font-weight:600}
+.callout strong{font-variant-numeric:tabular-nums}
+.where{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.where div{background:var(--chip);border-radius:14px;padding:14px}
+.where b{display:block;font-family:var(--display);font-size:16px}
+.where small{color:var(--muted)}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.foot{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.foot a{color:inherit}
+.disc{background:#0B213B;color:#fff;border-radius:16px;padding:14px 18px;font-size:14px;font-weight:600}
+.disc b{color:var(--gold)}
+.ex{font-size:12px;font-weight:700;color:var(--muted)}
+.cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.cats label{font-size:14px;margin-bottom:4px}
+.cats .money input{font-size:17px;padding:10px 10px 10px 0}
+.group{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);grid-column:1/-1;margin-top:4px}
+.total{display:flex;justify-content:space-between;align-items:baseline;gap:12px;background:var(--chip);border-radius:14px;padding:12px 16px;font-weight:800}
+.total span:last-child{font-family:var(--display);font-size:24px;font-variant-numeric:tabular-nums}
+.slider{display:flex;flex-direction:column;gap:8px;background:var(--chip);border-radius:14px;padding:14px 16px}
+.slider .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.slider input[type=range]{width:100%;accent-color:#0B213B}
+.slider input[type=range]:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+.ticks{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.btn{background:transparent;border:2px solid var(--line);color:var(--ink);font:700 14px var(--body);border-radius:999px;padding:6px 14px;cursor:pointer}
+.btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.sug{font-size:14px;font-weight:600;color:var(--muted)}
+</style><link rel="icon" href="nitin.png"></head><body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><a href="tools.html">← All free tools</a> · Chalo Samjhein with Nitin</div>
+    <h1>How big should your <em>emergency fund</em> be?</h1>
+    <p class="lede">Your numbers are saved only on this device, so they are here next time you open this page. The common rule is 3–6 months of <b>expenses</b>, not salary. Enter your numbers to see your target, how it compares with "6 months' salary", and how long it takes to get there.</p>
+  </header>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="in-h">
+      <h2 id="in-h">Your monthly essentials</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span class="ex" id="exnote">Example values are filled in. Replace them with yours.</span><button type="button" class="btn" id="reset">Reset to example</button></div>
+      <div class="cats" role="group" aria-label="Monthly essential expenses">
+        <div class="group">Home</div>
+        <div><label for="rent">Rent or home loan EMI</label><div class="money"><span>₹</span><input class="cat" id="rent" inputmode="numeric" value="12,000"></div></div>
+        <div><label for="food">Food and groceries</label><div class="money"><span>₹</span><input class="cat" id="food" inputmode="numeric" value="8,000"></div></div>
+        <div><label for="bills">Electricity, phone, internet</label><div class="money"><span>₹</span><input class="cat" id="bills" inputmode="numeric" value="3,000"></div></div>
+        <div><label for="transport">Transport and fuel</label><div class="money"><span>₹</span><input class="cat" id="transport" inputmode="numeric" value="2,000"></div></div>
+        <div class="group">Family and dependents</div>
+        <div><label for="school">Children's school fees</label><div class="money"><span>₹</span><input class="cat" id="school" inputmode="numeric" value="4,000"></div></div>
+        <div><label for="parents">Parents' medical and support</label><div class="money"><span>₹</span><input class="cat" id="parents" inputmode="numeric" value="3,000"></div></div>
+        <div class="group">Commitments</div>
+        <div><label for="emis">Other loan EMIs</label><div class="money"><span>₹</span><input class="cat" id="emis" inputmode="numeric" value="0"></div></div>
+        <div><label for="ins">Insurance premiums (monthly)</label><div class="money"><span>₹</span><input class="cat" id="ins" inputmode="numeric" value="2,000"></div></div>
+        <div><label for="other">Other essentials</label><div class="money"><span>₹</span><input class="cat" id="other" inputmode="numeric" value="1,000"></div></div>
+      </div>
+      <div class="total"><span>Monthly essential expenses</span><span id="exptotal">₹35,000</span></div>
+      <h2>Income and savings</h2>
+      <div>
+        <label for="sal">Monthly take-home salary</label>
+        <div class="money"><span>₹</span><input id="sal" inputmode="numeric" value="60,000"></div>
+      </div>
+      <div>
+        <label for="have">Already saved for emergencies</label>
+        <div class="money"><span>₹</span><input id="have" inputmode="numeric" value="40,000"></div>
+      </div>
+      <div>
+        <label for="save">You can set aside each month</label>
+        <div class="money"><span>₹</span><input id="save" inputmode="numeric" value="8,000"></div>
+      </div>
+      <div class="checks" role="group" aria-label="Your situation">
+        <label class="check"><input type="checkbox" id="single" checked><span><b>Only earner at home</b><small>Nobody else's income to fall back on</small></span></label>
+        <label class="check"><input type="checkbox" id="emi"><span><b>Big EMIs</b><small>Loan payments take a large share of income</small></span></label>
+        <label class="check"><input type="checkbox" id="var"><span><b>Irregular income</b><small>Freelance, business or commission-based</small></span></label>
+      </div>
+      <div class="slider">
+        <div class="top"><label for="mslider" style="margin:0">Months of expenses to keep</label><span class="sug" id="sugtxt">Suggested: 4</span></div>
+        <input type="range" id="mslider" min="3" max="9" step="1" value="4">
+        <div class="ticks"><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></div>
+        <div><button type="button" class="btn" id="usesug" hidden>Use suggestion</button></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="out-h" aria-live="polite">
+      <h2 id="out-h">Your emergency fund</h2>
+      <span class="pill" id="months">5 months of expenses</span>
+      <div class="big"><span class="v" id="target">₹1,40,000</span><span class="l">suggested target</span></div>
+
+      <div class="bars">
+        <div class="bar"><div class="row"><span>Your target</span><span id="b1">₹1,40,000</span></div><div class="track"><div class="fill f-target" id="f1"></div></div></div>
+        <div class="bar"><div class="row"><span>"6 months' salary" rule</span><span id="b2">₹3,60,000</span></div><div class="track"><div class="fill f-salary" id="f2"></div></div></div>
+        <div class="bar"><div class="row"><span>Saved so far</span><span id="b3">₹40,000</span></div><div class="track"><div class="fill f-have" id="f3"></div></div></div>
+      </div>
+
+      <div class="callout" id="gap">You need ₹1,00,000 more. At ₹8,000 a month, that's about 13 months.</div>
+
+      <h2>Where people usually keep it</h2>
+      <div class="where">
+        <div><b>Savings account</b><small>Money available instantly</small></div>
+        <div><b>Sweep-in FD</b><small>Linked to savings; breaks automatically when needed</small></div>
+        <div><b>Liquid fund</b><small>Usually paid out by the next working day; market-linked</small></div>
+      </div>
+      <p class="foot" style="margin:0">Bank deposits are insured by DICGC up to ₹5 lakh per depositor per bank. Liquid funds are low risk, not risk-free. This is general information, not a product recommendation.</p>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="how-h">
+    <h2 id="how-h">How this calculator decides the months</h2>
+    <ul>
+      <li>Starts at <b>3 months</b> of essential expenses, the low end of the common 3–6 month guideline.</li>
+      <li>Adds <b>1 month</b> each if you're the only earner or have big EMIs.</li>
+      <li>Adds <b>2 months</b> if your income is irregular.</li>
+      <li>Caps at <b>9 months</b>. These steps are a simple illustration of the guideline, not a formula from a regulator.</li>
+      <li>The slider lets you pick any number of months from 3 to 9 yourself. Your choice is used for the target.</li>
+      <li>Dependents are already covered: their costs (school fees, parents' medical support) are part of your monthly expenses, so they are counted for every month of the fund. No extra month is added for them, so nothing is counted twice.</li>
+    </ul>
+    <div class="foot">
+      <span>Sources: Vanguard research on emergency savings (12,400+ investors), via CNBC, 30 May 2025 (US data). Planner guidance on 3–6 months of expenses via Stable Money, May 2025. DICGC deposit insurance limit of ₹5 lakh: <a href="https://www.dicgc.org.in" target="_blank" rel="noopener">dicgc.org.in</a>.</span>
+    </div>
+    <div class="disc"><b>Not SEBI-registered.</b> Education only. Not financial advice. For your own situation, speak to a qualified adviser.</div>
+  </section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+const num=el=>{const v=parseFloat(String(el.value).replace(/[^0-9.]/g,""));return isFinite(v)&&v>0?v:0};
+function monthsFor(f){let m=3;if(f.single)m++;if(f.emi)m++;if(f.var)m+=2;return Math.min(m,9)}
+let manual=false;
+function update(){
+  const cats=[...document.querySelectorAll(".cat")];
+  const exp=cats.reduce((t,el)=>t+num(el),0),sal=num($("sal")),have=num($("have")),save=num($("save"));
+  const sug=monthsFor({single:$("single").checked,emi:$("emi").checked,var:$("var").checked});
+  if(!manual)$("mslider").value=sug;
+  const m=parseInt($("mslider").value,10);
+  $("sugtxt").textContent=manual&&m!==sug?"Suggested: "+sug+" · You chose: "+m:"Suggested: "+sug;
+  $("usesug").hidden=!(manual&&m!==sug);
+  $("exptotal").textContent=fmt(exp);
+  const target=exp*m,salRule=sal*6,max=Math.max(target,salRule,have,1);
+  $("months").textContent=m+" months of expenses";
+  $("target").textContent=fmt(target);$("b1").textContent=fmt(target);$("b2").textContent=fmt(salRule);$("b3").textContent=fmt(have);
+  $("f1").style.width=(target/max*100)+"%";$("f2").style.width=(salRule/max*100)+"%";$("f3").style.width=(have/max*100)+"%";
+  const gap=target-have;let msg;
+  if(exp===0)msg="Fill in your monthly essentials to see your target.";
+  else if(gap<=0)msg="You've already reached your target of "+fmt(target)+". Anything extra can go towards other goals.";
+  else if(save>0){const mo=Math.ceil(gap/save);msg="You need "+fmt(gap)+" more. At "+fmt(save)+" a month, that's about "+mo+(mo===1?" month.":" months.")}
+  else msg="You need "+fmt(gap)+" more. Add a monthly amount to see how long it takes.";
+  if(exp>0&&sal>0&&salRule>target)msg+=" That's "+fmt(salRule-target)+" less than the \"6 months' salary\" rule, money that doesn't have to sit idle.";
+  $("gap").textContent=msg;
+}
+$("mslider").addEventListener("input",()=>{manual=true;update()});
+$("usesug").addEventListener("click",()=>{manual=false;update()});
+document.querySelectorAll("input:not(#mslider)").forEach(el=>{
+  el.addEventListener("input",update);
+  if(el.inputMode==="numeric")el.addEventListener("blur",()=>{const v=num(el);el.value=v?v.toLocaleString("en-IN"):""});
+});
+const KEY="csn-emergency-fund-v1";
+const fields=[...document.querySelectorAll("input")].filter(el=>el.id);
+const defaults={};fields.forEach(el=>defaults[el.id]=el.type==="checkbox"?el.checked:el.value);
+function save(){try{const d={manual};fields.forEach(el=>d[el.id]=el.type==="checkbox"?el.checked:el.value);localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(!d)return false;fields.forEach(el=>{if(el.id in d){if(el.type==="checkbox")el.checked=!!d[el.id];else el.value=d[el.id]}});manual=!!d.manual;return true}catch(e){return false}}
+if(load())$("exnote").textContent="Your saved numbers are loaded.";
+$("reset").addEventListener("click",()=>{fields.forEach(el=>{if(el.type==="checkbox")el.checked=defaults[el.id];else el.value=defaults[el.id]});manual=false;try{localStorage.removeItem(KEY)}catch(e){}$("exnote").textContent="Example values are filled in. Replace them with yours.";update()});
+document.addEventListener("input",save);document.addEventListener("change",save);$("usesug").addEventListener("click",save);
+update();
+</script>
+</body></html>
